@@ -15,6 +15,7 @@ from pathlib import Path
 
 import soundfile as sf
 import torch
+from huggingface_hub import snapshot_download
 
 os.environ.setdefault("HF_HUB_DISABLE_PROGRESS_BARS", "1")
 # pythonw on Windows may set std streams to None; tqdm expects writable streams.
@@ -67,7 +68,7 @@ OUTPUT_PATH_ROLE = Qt.UserRole
 SOURCE_PATH_ROLE = Qt.UserRole + 1
 
 APP_NAME = "LavaSR Fast Enhancer"
-APP_VERSION = "0.1.0"
+APP_VERSION = "1.0.0"
 APP_ORG = "QATSISoft"
 APP_SETTINGS_KEY = "LavaSRFastEnhancer"
 DEFAULT_MODEL_PATH = "YatharthS/LavaSR"
@@ -79,9 +80,14 @@ else:
 
 APP_CONFIG_PATH = APP_DIR / "app_config.json"
 DEFAULT_APP_CONFIG = {
-    "github_repo": "QATSISoft/LavaSR-Fast-Enhancer",
+    "github_repo": "faxlab/LavaSR-Fast-Enhancer",
     "release_asset_keyword": "setup",
 }
+if os.name == "nt":
+    APP_CACHE_DIR = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local"))) / APP_SETTINGS_KEY
+else:
+    APP_CACHE_DIR = Path.home() / ".cache" / APP_SETTINGS_KEY
+MODEL_STORE_DIR = APP_CACHE_DIR / "models"
 _MODEL_CACHE: dict[tuple[str, str, str], LavaEnhance | LavaEnhance2] = {}
 _MODEL_CACHE_LOCK = threading.Lock()
 
@@ -223,6 +229,36 @@ def resolve_resource_path(*parts: str) -> Path:
     return candidate_bases[0].joinpath(*parts)
 
 
+def looks_like_hf_repo_id(model_path: str) -> bool:
+    value = model_path.strip()
+    if not value or "://" in value:
+        return False
+    if value.startswith((".", "~")):
+        return False
+    path_candidate = Path(value).expanduser()
+    if path_candidate.exists():
+        return False
+    parts = [part for part in value.split("/") if part]
+    return len(parts) == 2
+
+
+def resolve_model_root(model_path: str, status_cb, force_download: bool = False) -> str:
+    raw_value = model_path.strip() or DEFAULT_MODEL_PATH
+    path_candidate = Path(raw_value).expanduser()
+    if path_candidate.exists():
+        return str(path_candidate.resolve())
+
+    if looks_like_hf_repo_id(raw_value):
+        target_dir = MODEL_STORE_DIR / raw_value.replace("/", "__")
+        target_dir.mkdir(parents=True, exist_ok=True)
+        status_cb(f"Model cache: {target_dir}")
+        downloaded = snapshot_download(raw_value, local_dir=target_dir, force_download=force_download)
+        # Use POSIX separators to avoid mixed-path edge cases on frozen Windows builds.
+        return Path(downloaded).resolve().as_posix()
+
+    return raw_value
+
+
 def parse_version_tuple(version_text: str) -> tuple[int, ...]:
     cleaned = version_text.strip().lower()
     if cleaned.startswith("v"):
@@ -352,20 +388,35 @@ class UpdateDownloadThread(QThread):
             self.failed.emit(str(exc))
 
 def get_or_create_model(settings: EnhanceSettings, resolved_device: str, status_cb) -> LavaEnhance | LavaEnhance2:
-    cache_key = (settings.model_version, settings.model_path, resolved_device)
+    resolved_model_path = resolve_model_root(settings.model_path, status_cb, force_download=False)
+    cache_key = (settings.model_version, resolved_model_path, resolved_device)
     with _MODEL_CACHE_LOCK:
         cached_model = _MODEL_CACHE.get(cache_key)
     if cached_model is not None:
         return cached_model
 
     status_cb("Loading LavaSR model (first run may download weights)...")
-    if settings.model_version == "v1":
-        model = LavaEnhance(model_path=settings.model_path, device=resolved_device)
-    else:
-        model = LavaEnhance2(model_path=settings.model_path, device=resolved_device)
+    try:
+        if settings.model_version == "v1":
+            model = LavaEnhance(model_path=resolved_model_path, device=resolved_device)
+        else:
+            model = LavaEnhance2(model_path=resolved_model_path, device=resolved_device)
+    except OSError as exc:
+        # In packaged Windows builds, occasionally the first downloaded snapshot can be in a bad state.
+        if os.name == "nt" and exc.errno == 22 and looks_like_hf_repo_id(settings.model_path):
+            status_cb("Model load failed with Windows path error, retrying with forced model refresh...")
+            retry_model_path = resolve_model_root(settings.model_path, status_cb, force_download=True)
+            if settings.model_version == "v1":
+                model = LavaEnhance(model_path=retry_model_path, device=resolved_device)
+            else:
+                model = LavaEnhance2(model_path=retry_model_path, device=resolved_device)
+            resolved_model_path = retry_model_path
+        else:
+            raise
 
+    final_cache_key = (settings.model_version, resolved_model_path, resolved_device)
     with _MODEL_CACHE_LOCK:
-        _MODEL_CACHE[cache_key] = model
+        _MODEL_CACHE[final_cache_key] = model
     return model
 
 

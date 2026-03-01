@@ -1,9 +1,9 @@
 ; Inno Setup script for LavaSR Fast Enhancer
 ; Compile with:
-;   ISCC.exe /DMyAppVersion=0.1.0 /DSourceDir="...\dist\LavaSRFastEnhancer" /DOutputDir="...\release\out" release\LavaSRFastEnhancer.iss
+;   ISCC.exe /DMyAppVersion=1.0.0 /DSourceDir="...\dist\LavaSRFastEnhancer" /DOutputDir="...\release\out" release\LavaSRFastEnhancer.iss
 
 #ifndef MyAppVersion
-  #define MyAppVersion "0.1.0"
+  #define MyAppVersion "1.0.0"
 #endif
 
 #ifndef SourceDir
@@ -19,7 +19,7 @@ AppId={{A18CC302-B03E-4DD8-9C8F-7253DBA00C41}
 AppName=LavaSR Fast Enhancer
 AppVersion={#MyAppVersion}
 AppPublisher=QATSISoft
-AppPublisherURL=https://github.com/QATSISoft/LavaSR-Fast-Enhancer
+AppPublisherURL=https://github.com/faxlab/LavaSR-Fast-Enhancer
 DefaultDirName={autopf}\LavaSR Fast Enhancer
 DefaultGroupName=LavaSR Fast Enhancer
 AllowNoIcons=yes
@@ -30,6 +30,7 @@ Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
 ArchitecturesInstallIn64BitMode=x64
+SetupIconFile=..\assets\toollogo.ico
 UninstallDisplayIcon={app}\LavaSRFastEnhancer.exe
 
 [Languages]

@@ -2,6 +2,8 @@
 
 Fast Windows desktop app for enhancing audio with [LavaSR](https://github.com/ysharma3501/LavaSR).
 
+![LavaSR Fast Enhancer screenshot](assets/appscreenshot.png)
+
 ## What Users Need To Know
 
 - Drag/drop or select multiple audio files
@@ -51,7 +53,7 @@ Update source is configured by `app_config.json`:
 
 ```json
 {
-  "github_repo": "QATSISoft/LavaSR-Fast-Enhancer",
+  "github_repo": "faxlab/LavaSR-Fast-Enhancer",
   "release_asset_keyword": "setup"
 }
 ```
@@ -76,11 +78,22 @@ Build command:
 .\release\build_installer.ps1
 ```
 
+If Inno Setup is not installed, the script now completes a portable build and exits successfully.
+Use strict mode to require installer packaging:
+
+```powershell
+.\release\build_installer.ps1 -RequireInstaller
+```
+
+Installer output (`release/out/LavaSR-Fast-Enhancer-Setup-<version>.exe`) is created only when Inno Setup is installed.
+
 If you want the window to stay open on errors, use:
 
 ```powershell
 .\release\build_installer.bat
 ```
+
+`build_installer.bat` also prompts to install Inno Setup automatically (via `winget`/`choco`) when it is missing.
 
 Portable-only build (skip installer packaging):
 
@@ -103,7 +116,7 @@ Output:
 ## Versioning
 
 - App version is defined in `lavasr_gui.py` as `APP_VERSION`.
-- For release tags, use `v<same-version>` (for example `v0.1.0`).
+- For release tags, use `v<same-version>` (for example `v1.0.0`).
 
 ## Legal And Licensing
 
