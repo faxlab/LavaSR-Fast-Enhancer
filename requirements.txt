@@ -1,0 +1,3 @@
+PySide6>=6.7
+soundfile>=0.12
+LavaSR @ git+https://github.com/ysharma3501/LavaSR.git
