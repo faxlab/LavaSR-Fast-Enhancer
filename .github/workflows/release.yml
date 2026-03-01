@@ -1,4 +1,4 @@
-name: Build And Release Installer
+name: Build And Release
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  build-installer:
+  build-release-assets:
     runs-on: windows-latest
 
     steps:
@@ -26,18 +26,45 @@ jobs:
         shell: powershell
         run: choco install innosetup -y --no-progress
 
+      - name: Resolve Version
+        id: version
+        shell: powershell
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if ($tag -and $tag.StartsWith("v")) {
+            $version = $tag.Substring(1)
+          } else {
+            $versionLine = Select-String -Path ".\lavasr_gui.py" -Pattern '^\s*APP_VERSION\s*=\s*"([^"]+)"\s*$' | Select-Object -First 1
+            if (-not $versionLine) { throw "APP_VERSION not found in lavasr_gui.py" }
+            $version = $versionLine.Matches[0].Groups[1].Value
+          }
+          "value=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
       - name: Build Installer
         shell: powershell
-        run: .\release\build_installer.ps1
+        run: .\release\build_installer.ps1 -RequireInstaller
+
+      - name: Create Portable Zip
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force ".\release\out" | Out-Null
+          $version = "${{ steps.version.outputs.value }}"
+          $zipPath = ".\release\out\LavaSRFastEnhancer-Portable-$version.zip"
+          if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+          Compress-Archive -Path ".\dist\LavaSRFastEnhancer" -DestinationPath $zipPath -Force
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: LavaSR-Fast-Enhancer-Installer
-          path: release/out/*.exe
+          name: LavaSR-Fast-Enhancer-Release-Assets
+          path: |
+            release/out/*.exe
+            release/out/*.zip
 
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: release/out/*.exe
+          files: |
+            release/out/*.exe
+            release/out/*.zip
