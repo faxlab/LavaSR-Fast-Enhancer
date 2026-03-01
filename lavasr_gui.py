@@ -72,6 +72,7 @@ APP_VERSION = "1.0.1"
 APP_ORG = "QATSISoft"
 APP_SETTINGS_KEY = "LavaSRFastEnhancer"
 DEFAULT_MODEL_PATH = "YatharthS/LavaSR"
+KOFI_URL = "https://ko-fi.com/faxcorp"
 
 if getattr(sys, "frozen", False):
     APP_DIR = Path(sys.executable).resolve().parent
@@ -808,6 +809,7 @@ class MainWindow(QMainWindow):
         QShortcut(QKeySequence("Ctrl+L"), self, self.clear_files)
         QShortcut(QKeySequence("Ctrl+Return"), self, self.on_enhance_button_clicked)
         self.setup_help_menu()
+        self.setup_status_footer()
 
         self.setStyleSheet(
             """
@@ -1024,6 +1026,19 @@ class MainWindow(QMainWindow):
         notices_action = QAction("Open Third-Party Notices", self)
         notices_action.triggered.connect(lambda: self.open_help_document("THIRD_PARTY_NOTICES.md"))
         help_menu.addAction(notices_action)
+
+        help_menu.addSeparator()
+        support_action = QAction("Support on Ko-fi", self)
+        support_action.triggered.connect(lambda: QDesktopServices.openUrl(QUrl(KOFI_URL)))
+        help_menu.addAction(support_action)
+
+    def setup_status_footer(self) -> None:
+        support_link = QLabel(
+            f'<a href="{KOFI_URL}" style="color:#6f757b;text-decoration:none;">Support on Ko-fi</a>'
+        )
+        support_link.setOpenExternalLinks(True)
+        support_link.setToolTip("Optional support link")
+        self.statusBar().addPermanentWidget(support_link)
 
     def open_help_document(self, filename: str) -> None:
         doc_path = resolve_resource_path(filename)
