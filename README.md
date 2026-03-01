@@ -34,6 +34,8 @@ Got audio that sounds thin, muffled, or low-quality? This app uses an AI model c
 
 It's designed to be fast and simple. Drop your files in, click **Enhance**, and you're done.
 
+> **LavaSR** is an independent open-source project developed by [ysharma3501](https://github.com/ysharma3501/LavaSR). This GUI is a separate application that uses it as a backend — all credit for the model and core enhancement technology goes to the LavaSR authors.
+
 LavaSR runs at ~5000× realtime on GPU and ~60× on CPU, fits in ~500 MB VRAM with a ~50 MB model, and outperforms larger diffusion-based models on audio quality benchmarks.
 
 ---
