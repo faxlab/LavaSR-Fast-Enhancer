@@ -26,7 +26,7 @@ if sys.stderr is None:
 
 from LavaSR.model import LavaEnhance, LavaEnhance2
 from PySide6.QtCore import QMimeData, QSettings, QThread, QTimer, QUrl, Qt, Signal
-from PySide6.QtGui import QDesktopServices, QDrag, QIcon, QKeySequence, QShortcut
+from PySide6.QtGui import QAction, QDesktopServices, QDrag, QIcon, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -68,7 +68,7 @@ OUTPUT_PATH_ROLE = Qt.UserRole
 SOURCE_PATH_ROLE = Qt.UserRole + 1
 
 APP_NAME = "LavaSR Fast Enhancer"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 APP_ORG = "QATSISoft"
 APP_SETTINGS_KEY = "LavaSRFastEnhancer"
 DEFAULT_MODEL_PATH = "YatharthS/LavaSR"
@@ -218,6 +218,8 @@ def sanitize_folder_name(name: str) -> str:
 
 def resolve_resource_path(*parts: str) -> Path:
     candidate_bases = [APP_DIR]
+    if getattr(sys, "frozen", False):
+        candidate_bases.append(APP_DIR / "_internal")
     if getattr(sys, "frozen", False):
         meipass = getattr(sys, "_MEIPASS", None)
         if meipass:
@@ -805,6 +807,7 @@ class MainWindow(QMainWindow):
         QShortcut(QKeySequence("Delete"), self, self.remove_selected_files)
         QShortcut(QKeySequence("Ctrl+L"), self, self.clear_files)
         QShortcut(QKeySequence("Ctrl+Return"), self, self.on_enhance_button_clicked)
+        self.setup_help_menu()
 
         self.setStyleSheet(
             """
@@ -1006,6 +1009,32 @@ class MainWindow(QMainWindow):
     def on_override_output_folder_toggled(self, enabled: bool) -> None:
         self.override_output_folder_edit.setEnabled(enabled)
         self.override_output_folder_button.setEnabled(enabled)
+
+    def setup_help_menu(self) -> None:
+        help_menu = self.menuBar().addMenu("Help")
+
+        readme_action = QAction("Open README", self)
+        readme_action.triggered.connect(lambda: self.open_help_document("README.md"))
+        help_menu.addAction(readme_action)
+
+        license_action = QAction("Open License", self)
+        license_action.triggered.connect(lambda: self.open_help_document("LICENSE"))
+        help_menu.addAction(license_action)
+
+        notices_action = QAction("Open Third-Party Notices", self)
+        notices_action.triggered.connect(lambda: self.open_help_document("THIRD_PARTY_NOTICES.md"))
+        help_menu.addAction(notices_action)
+
+    def open_help_document(self, filename: str) -> None:
+        doc_path = resolve_resource_path(filename)
+        if not doc_path.exists():
+            self.append_log(f"Help file not found: {filename}")
+            QMessageBox.warning(self, "File Not Found", f"Could not find bundled file:\n{filename}")
+            return
+        opened = QDesktopServices.openUrl(QUrl.fromLocalFile(str(doc_path)))
+        if not opened:
+            self.append_log(f"Could not open help file: {doc_path}")
+            QMessageBox.warning(self, "Open Failed", f"Could not open file:\n{doc_path}")
 
     def browse_override_output_folder(self) -> None:
         start_dir = self.override_output_folder_edit.text().strip()

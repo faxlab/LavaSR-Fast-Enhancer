@@ -1,13 +1,35 @@
 # LavaSR Fast Enhancer
 
-Fast Windows desktop app for enhancing audio with [LavaSR](https://github.com/ysharma3501/LavaSR).
+Fast Windows desktop app for [LavaSR](https://github.com/ysharma3501/LavaSR) that restores high-frequency detail and upsamples audio to 48 kHz WAV (with optional denoise).
 
 ![LavaSR Fast Enhancer screenshot](assets/appscreenshot.png)
+
+## What It Does
+
+- Restores missing high-frequency detail in bandwidth-limited or dull audio
+- Upsamples processed output to `48 kHz WAV`
+- Optionally runs denoise before bandwidth restoration
+- Handles single files or batches with drag/drop + one-click processing
+- Lets you drag completed files out of the app directly into DAWs/folders/apps
+
+## Typical Use Cases
+
+- Improving old voice recordings, interviews, podcasts, or call captures
+- Preparing spoken-word clips for video edits when source sounds narrow
+- Cleaning and brightening stems/samples before music production workflows
+- Fast batch prep of multiple files for content pipelines
+- Quick offline restore/upsample pass before final mix/master stages
+
+## What It Is Not
+
+- Not a mastering suite
+- Not a real-time live processor
+- Not a guaranteed fix for heavy clipping, severe distortion, or strong reverb
 
 ## What Users Need To Know
 
 - Drag/drop or select multiple audio files
-- Click `Enhance` (click again to cancel current batch)
+- Click `Enhance` to run LavaSR restore + 48 kHz upsample (click again to cancel current batch)
 - Drag completed files directly into DAWs/folders/apps
 - Optional auto-update check on app launch (OFF by default)
 
@@ -39,7 +61,7 @@ python .\lavasr_gui.py
    - Suffix naming
    - Increment suffix
    - Output folder + folder name
-3. Click `Enhance`.
+3. Click `Enhance` (restores highs and outputs 48 kHz WAV files).
 4. When files show `Done: ...`, drag them out from the list.
 
 ## Auto Update
@@ -63,7 +85,7 @@ Update source is configured by `app_config.json`:
 - `Ctrl+O`: Select files
 - `Delete`: Remove selected queued file rows
 - `Ctrl+L`: Clear queue
-- `Ctrl+Enter`: Enhance / Cancel
+- `Ctrl+Enter`: Run/Cancel LavaSR restore + 48 kHz upsample
 
 ## Build Windows `.exe` Installer (Maintainers)
 
@@ -116,7 +138,7 @@ Output:
 ## Versioning
 
 - App version is defined in `lavasr_gui.py` as `APP_VERSION`.
-- For release tags, use `v<same-version>` (for example `v1.0.0`).
+- For release tags, use `v<same-version>` (for example `v1.0.1`).
 
 ## Legal And Licensing
 

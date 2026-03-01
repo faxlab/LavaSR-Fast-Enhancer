@@ -1,9 +1,9 @@
 ; Inno Setup script for LavaSR Fast Enhancer
 ; Compile with:
-;   ISCC.exe /DMyAppVersion=1.0.0 /DSourceDir="...\dist\LavaSRFastEnhancer" /DOutputDir="...\release\out" release\LavaSRFastEnhancer.iss
+;   ISCC.exe /DMyAppVersion=1.0.1 /DSourceDir="...\dist\LavaSRFastEnhancer" /DOutputDir="...\release\out" release\LavaSRFastEnhancer.iss
 
 #ifndef MyAppVersion
-  #define MyAppVersion "1.0.0"
+  #define MyAppVersion "1.0.1"
 #endif
 
 #ifndef SourceDir
